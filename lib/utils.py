@@ -15,7 +15,7 @@ def pdf_report(topic: str, markdown: str) -> None:
         None
     """
     pdf = MarkdownPdf()
-    pdf.add_section(Section(markdown, toc=False))
+    pdf.add_section(Section(markdown))
     os.makedirs("reports", exist_ok=True)
     try:
         pdf.save(f"reports/{topic}.pdf")
