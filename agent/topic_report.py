@@ -47,11 +47,12 @@ research_agent = Agent(
 )
 
 
-analysis_agent = Agent(
-    name="Analysis Agent",
-    model=Gemini(id="gemini-2.0-flash-exp"),
-    description=dedent("""\
-            You're a meticulous analyst (TSW-X) with a keen eye for detail 
+def create_analysis_agent(lang: str) -> Agent:
+    return Agent(
+        name="Analysis Agent",
+        model=Gemini(id="gemini-2.0-flash-exp"),
+        description=dedent("""\
+            You're a meticulous analyst (TSW-X) with a keen eye for detail
             and a distinguished AI research scientist with expertise
             in analyzing and synthesizing complex information. Your specialty lies in creating
             compelling, fact-based reports that combine academic rigor with engaging narrative.
@@ -62,15 +63,16 @@ analysis_agent = Agent(
             - Fact-focused with proper citations
             - Accessible to educated non-specialists\
         """),
-    instructions=[
-        "You're known for your ability to turn complex data into clear and concise reports, making it easy for others to understand and act on the information you provide."
-        "Generate a report based on the research results.",
-        "Always include sources as a reference in the report",
-        "The report should be informative with a clear structure and easy to understand.",
-        "At the same time, the report should include a summary of the most important findings and insights.",
-        "Output the report without any additional explanation or commentary.",
-    ],
-    expected_output=dedent("""\
+        instructions=[
+            "You're known for your ability to turn complex data into clear and concise reports, making it easy for others to understand and act on the information you provide."
+            "Generate a report based on the research results.",
+            "Always include sources as a reference in the report",
+            "The report should be informative with a clear structure and easy to understand.",
+            "At the same time, the report should include a summary of the most important findings and insights.",
+            "Output the report without any additional explanation or commentary.",
+            f"Write the report in language: {lang}.",
+        ],
+        expected_output=dedent("""\
     A professional research report in markdown format:
 
     # {Compelling Title That Captures the Topic's Essence}
@@ -105,9 +107,9 @@ analysis_agent = Agent(
     Advanced Research Systems Division
     Date: {current_date}\
     """),
-    show_tool_calls=True,
-    markdown=True,
-)
+        show_tool_calls=True,
+        markdown=True,
+    )
 
 
 def research(topic: str) -> str:
@@ -125,7 +127,7 @@ def research(topic: str) -> str:
     return "\n".join(research)
 
 
-def generate_report(topic: str):
+def generate_report(topic: str, lang: str):
     researchResult = research(topic)
-    analysisResult: RunResponse = analysis_agent.run(researchResult)
+    analysisResult: RunResponse = create_analysis_agent(lang).run(researchResult)
     pdf_report(topic, analysisResult.content)

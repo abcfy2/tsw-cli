@@ -10,11 +10,12 @@ app = typer.Typer(help="a command line interface for your tiny smart workers.")
 @app.command()
 def report(
     topic: str = typer.Argument(..., help="topic to generate a report for"),
+    lang: str = typer.Option("english", help="language to generate the report in"),
 ):
     """
     Generate a report for a given topic.
     """
-    generate_report(topic)
+    generate_report(topic, lang)
 
 
 def main():
