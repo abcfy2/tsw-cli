@@ -1,8 +1,12 @@
 import sys
 
 import typer
+from dotenv import load_dotenv
 
-from agent.topic_report import generate_report
+from agent.report import generate_report
+from agent.summary import generate_summary
+
+load_dotenv()
 
 app = typer.Typer(help="a command line interface for your tiny smart workers.")
 
@@ -16,6 +20,17 @@ def report(
     Generate a report for a given topic.
     """
     generate_report(topic, lang)
+
+
+@app.command()
+def summary(
+    file: str = typer.Argument(..., help="File to generate a summary for"),
+    type: str = typer.Option("mindmap", help="Summary type to generate"),
+):
+    """
+    Generate a summary for a given file.
+    """
+    generate_summary(file, type)
 
 
 def main():

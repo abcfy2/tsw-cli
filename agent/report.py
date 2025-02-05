@@ -5,12 +5,9 @@ from typing import List
 from agno.agent import Agent, RunResponse
 from agno.models.google import Gemini
 from agno.tools.duckduckgo import DuckDuckGoTools
-from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from lib.utils import pdf_report
-
-load_dotenv()
 
 
 class SubTopics(BaseModel):
@@ -123,7 +120,7 @@ def research(topic: str) -> str:
             ).content
         )
         # rate limiting
-        time.sleep(0.5)
+        time.sleep(1)
     return "\n".join(research)
 
 
