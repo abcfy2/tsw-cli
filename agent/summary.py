@@ -4,8 +4,9 @@ from textwrap import dedent
 from agno.agent import Agent, RunResponse
 from agno.models.google import Gemini
 
+from agent.settings import MODEL_ID
 from lib.pako import generate_image_dataurl, generate_pako_link
-from lib.utils import extract_text_from_pdf, write
+from lib.utils import download, extract_text_from_pdf, filename, write
 
 mindmapPrompt = """
         Based on the given article:
@@ -103,7 +104,7 @@ mindmapPrompt = """
 
 mindmap_agent = Agent(
     name="Mindmap Agent",
-    model=Gemini(id="gemini-2.0-flash-exp"),
+    model=Gemini(id=MODEL_ID),
     description="You are an MermaidJS diagram generator. You can generate stunning MermaidJS diagram codes.",
     instructions=mindmapPrompt,
     markdown=False,
@@ -111,7 +112,7 @@ mindmap_agent = Agent(
 
 summary_agent = Agent(
     name="Summary Agent",
-    model=Gemini("gemini-2.0-flash-exp"),
+    model=Gemini(id=MODEL_ID),
     description="You are a professional document summarizer. ",
     instructions=[
         "Extract the key information and create concise summaries. "
@@ -149,32 +150,38 @@ summary_agent = Agent(
     markdown=True,
 )
 
-# summary_team = Agent(
-#     name="Summary Team",
-#     model=Gemini("gemini-2.0-flash-exp"),
-#     team=[mindmap_agent, summary_agent],
-#     instructions=[
-#         "First, search hackernews for what the user is asking about.",
-#         "Then, ask the article reader to read the links for the stories to get more information.",
-#         "Important: you must provide the article reader with the links to read.",
-#         "Then, ask the web searcher to search for each story to get more information.",
-#         "Finally, provide a thoughtful and engaging summary.",
-#     ],
-#     show_tool_calls=True,
-#     markdown=True,
-# )
+summary_team = Agent(
+    name="Summary Team",
+    model=Gemini(id=MODEL_ID),
+    team=[mindmap_agent, summary_agent],
+    instructions=[
+        "First, search hackernews for what the user is asking about.",
+        "Then, ask the article reader to read the links for the stories to get more information.",
+        "Important: you must provide the article reader with the links to read.",
+        "Then, ask the web searcher to search for each story to get more information.",
+        "Finally, provide a thoughtful and engaging summary.",
+    ],
+    show_tool_calls=True,
+    markdown=True,
+)
 
 
 def generate_summary(file: str, type: str):
     if type == "mindmap":
         text = extract_text_from_pdf(file)
-        _generate_mindmap(text)
+        link = _generate_mindmap(text)
+        download(link, f"{filename(file)}.png")
     elif type == "text":
         text = extract_text_from_pdf(file)
-        _generate_text(text)
+        summary = _generate_text(text)
+        write(f"{filename(file)}.md", summary)
     elif type == "both":
         text = extract_text_from_pdf(file)
-        _generate_both(text)
+        mindmap, summary = _generate_both(text)
+        lines = summary.split("\n")
+        lines.insert(1, f"\n## Mindmap\n![Mindmap]({generate_image_dataurl(mindmap)})")
+        summary = "\n".join(lines)
+        write(f"{filename(file)}.md", summary)
     else:
         print(f"Summary type {type} not supported.")
 
@@ -189,24 +196,15 @@ def _generate_mindmap(text: str) -> str:
     return image_link
 
 
-def _generate_text(text: str):
+def _generate_text(text: str) -> str:
     result: RunResponse = summary_agent.run(text)
     return result.content
 
 
-def _generate_both(text: str):
+def _generate_both(text: str) -> tuple:
     mindmap = _generate_mindmap(text)
     summary = _generate_text(text)
-    final_markdown = dedent(
-        summary
-        + "\n"
-        + f"""
-## Mindmap
-    
-![Mindmap]({generate_image_dataurl(mindmap)})
-    """
-    )
-    write("summary", final_markdown)
+    return mindmap, summary
 
 
 def _clean_text(text: str):

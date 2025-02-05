@@ -7,6 +7,7 @@ from agno.models.google import Gemini
 from agno.tools.duckduckgo import DuckDuckGoTools
 from pydantic import BaseModel
 
+from agent.settings import MODEL_ID
 from lib.utils import generate_pdf
 
 
@@ -16,7 +17,7 @@ class SubTopics(BaseModel):
 
 decompose_agent = Agent(
     name="Decompose Agent",
-    model=Gemini(id="gemini-2.0-flash-exp"),
+    model=Gemini(id=MODEL_ID),
     description="You're a skilled decomposer with a talent for breaking down complex topics into digestible parts.",
     instructions=[
         "Thinking of a topic, break it down into its key components.",
@@ -32,7 +33,7 @@ decompose_agent = Agent(
 
 research_agent = Agent(
     name="Research Agent",
-    model=Gemini(id="gemini-2.0-flash-exp"),
+    model=Gemini(id=MODEL_ID),
     tools=[DuckDuckGoTools(fixed_max_results=10)],
     description="You're a seasoned researcher with a knack for uncovering the latest developments in a given topic.",
     instructions=[
@@ -47,7 +48,7 @@ research_agent = Agent(
 def create_analysis_agent(lang: str) -> Agent:
     return Agent(
         name="Analysis Agent",
-        model=Gemini(id="gemini-2.0-flash-exp"),
+        model=Gemini(id=MODEL_ID),
         description=dedent("""\
             You're a meticulous analyst (TSW-X) with a keen eye for detail
             and a distinguished AI research scientist with expertise

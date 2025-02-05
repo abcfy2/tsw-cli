@@ -1,6 +1,7 @@
 import os
 
 import fitz
+import requests
 from markdown_pdf import MarkdownPdf, Section
 
 output_dir = "output"
@@ -26,9 +27,9 @@ def generate_pdf(name: str, markdown: str) -> None:
         print(f"Failed to save PDF report: {e}")
 
 
-def write(name: str, markdown: str, append=False) -> str:
+def write(filename: str, markdown: str, append=False) -> str:
     mode = "a" if append else "w"
-    with open(f"{output_dir}/{name}.md", mode) as f:
+    with open(f"{output_dir}/{filename}", mode) as f:
         f.write(markdown)
     return
 
@@ -39,3 +40,13 @@ def extract_text_from_pdf(file):
     for page in doc:
         text += page.get_text()
     return text
+
+
+def download(link: str, filename: str) -> None:
+    r = requests.get(link)
+    with open(f"{output_dir}/{filename}", "wb") as f:
+        f.write(r.content)
+
+
+def filename(file: str) -> str:
+    return ".".join(os.path.basename(file).split(".")[0:-1])
