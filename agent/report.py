@@ -7,7 +7,7 @@ from agno.models.google import Gemini
 from agno.tools.duckduckgo import DuckDuckGoTools
 from pydantic import BaseModel
 
-from lib.utils import pdf_report
+from lib.utils import generate_pdf
 
 
 class SubTopics(BaseModel):
@@ -127,4 +127,4 @@ def research(topic: str) -> str:
 def generate_report(topic: str, lang: str):
     researchResult = research(topic)
     analysisResult: RunResponse = create_analysis_agent(lang).run(researchResult)
-    pdf_report(topic, analysisResult.content)
+    generate_pdf(topic, analysisResult.content)
