@@ -1,4 +1,5 @@
 import sys
+from enum import Enum
 
 import typer
 from dotenv import load_dotenv
@@ -22,10 +23,16 @@ def report(
     generate_report(topic, lang)
 
 
+class SummaryType(str, Enum):
+    mindmap = "mindmap"
+    text = "text"
+    both = "both"
+
+
 @app.command()
 def summary(
     file: str = typer.Argument(..., help="File to generate a summary for"),
-    type: str = typer.Option("mindmap", help="Summary type to generate"),
+    type: SummaryType = typer.Option("mindmap", help="Summary type to generate"),
 ):
     """
     Generate a summary for a given file.
