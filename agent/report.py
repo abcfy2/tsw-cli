@@ -107,6 +107,7 @@ def create_analysis_agent(lang: str) -> Agent:
     """),
         show_tool_calls=True,
         markdown=True,
+        add_datetime_to_instructions=True,
     )
 
 
