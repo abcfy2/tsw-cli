@@ -208,7 +208,7 @@ def _generate_both(text: str) -> tuple:
 
 
 def _clean_text(text: str):
-    pattern = r"\s*\([^()]*?\)\s*(?=\s|$)"
+    pattern = r"\s*\([^()]*?\)\s*(?=:|\w|\s|$)"
     text = re.sub(pattern, " ", text)
     text = "\n".join(text.split("\n")[1:-1])
     return text
