@@ -14,13 +14,13 @@ app = typer.Typer(help="a command line interface for your tiny smart workers.")
 
 @app.command()
 def report(
-    topic: str = typer.Argument(..., help="topic to generate a report for"),
-    lang: str = typer.Option("english", help="language to generate the report in"),
+    topic: str = typer.Argument(..., help="report topic"),
+    config: str | None = typer.Option(None, help="config file path"),
 ):
     """
     Generate a report for a given topic.
     """
-    generate_report(topic, lang)
+    generate_report(topic, config)
 
 
 class SummaryType(str, Enum):

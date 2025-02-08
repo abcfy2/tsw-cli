@@ -129,5 +129,7 @@ cython_debug/
 # tmp dir
 tmp
 .DS_Store
-reports
+
+# data dir
 output
+config

@@ -27,14 +27,13 @@ def generate_pdf(name: str, markdown: str) -> None:
         print(f"Failed to save PDF report: {e}")
 
 
-def write(filename: str, markdown: str, append=False) -> str:
+def write(filename: str, markdown: str, append=False) -> None:
     mode = "a" if append else "w"
     with open(f"{output_dir}/{filename}", mode) as f:
         f.write(markdown)
-    return
 
 
-def extract_text_from_pdf(file):
+def extract_text_from_pdf(file: str) -> str:
     doc = fitz.open(file)
     text = ""
     for page in doc:

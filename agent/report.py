@@ -1,14 +1,28 @@
+import json
+import os
 import time
 from textwrap import dedent
-from typing import List
+from typing import List, Literal
 
+import markdown
+import resend
 from agno.agent import Agent, RunResponse
 from agno.models.google import Gemini
 from agno.tools.duckduckgo import DuckDuckGoTools
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agent.settings import MODEL_ID
-from lib.utils import generate_pdf
+from lib.utils import generate_pdf, write
+
+
+class Config(BaseModel):
+    lang: str = Field(default="english", description="Language for the report")
+    receivers: List[str] | None = Field(
+        default=None, description="List of email receivers"
+    )
+    format: Literal["md", "pdf"] = Field(
+        default="md", description="Output format of the report"
+    )
 
 
 class SubTopics(BaseModel):
@@ -126,7 +140,37 @@ def research(topic: str) -> str:
     return "\n".join(research)
 
 
-def generate_report(topic: str, lang: str):
+def generate_report(topic: str, config: str | None):
+    if config is None:
+        c = Config()
+    else:
+        with open(config, "r") as file:
+            json_data = json.load(file)
+        c = Config.model_validate(json_data)
     researchResult = research(topic)
-    analysisResult: RunResponse = create_analysis_agent(lang).run(researchResult)
-    generate_pdf(topic, analysisResult.content)
+    analysisResult: RunResponse = create_analysis_agent(c.lang).run(researchResult)
+    _output_report(topic, c.format, analysisResult.content)
+    if c.receivers:
+        _send_report(topic, c.receivers, analysisResult.content)
+
+
+def _output_report(topic, format, content):
+    if format == "md":
+        write(f"{topic}.md", content)
+    elif format == "pdf":
+        generate_pdf(topic, content)
+    else:
+        print(f"Invalid format({format}). Please choose either 'md' or 'pdf'.")
+
+
+def _send_report(topic: str, receivers: List[str], content: str):
+    html = markdown.markdown(content)
+    resend.api_key = os.getenv("RESEND_API_KEY")
+    resend.Emails.send(
+        {
+            "from": "TSW <onboarding@resend.dev>",
+            "to": receivers,
+            "subject": topic,
+            "html": html,
+        }
+    )
