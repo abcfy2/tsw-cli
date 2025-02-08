@@ -148,6 +148,7 @@ summary_agent = Agent(
     Date: {current_date}\
     """),
     markdown=True,
+    add_datetime_to_instructions=True,
 )
 
 summary_team = Agent(
