@@ -22,7 +22,7 @@ markdown = "^3.7"
 pypdf = "^5.2.0"
 sqlalchemy = "^2.0.38"
 pgvector = "^0.3.6"
-psycopg2-binary = "^2.9.10"
+psycopg = {extras = ["binary"], version = "^3.2.4"}
 
 
 [build-system]

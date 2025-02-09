@@ -9,7 +9,7 @@ from lib.utils import filename
 
 
 class Config(BaseModel):
-    # example: "postgresql://user:password@127.0.0.1:5432/db"
+    # example: "postgresql+psycopg://user:password@127.0.0.1:5432/db"
     pg_url: str = Field(description="KB database URL")
 
 
