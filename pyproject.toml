@@ -19,6 +19,10 @@ python-dotenv = "^1.0.1"
 duckduckgo-search = "^7.3.0"
 resend = "^2.6.0"
 markdown = "^3.7"
+pypdf = "^5.2.0"
+sqlalchemy = "^2.0.38"
+pgvector = "^0.3.6"
+psycopg2-binary = "^2.9.10"
 
 
 [build-system]
