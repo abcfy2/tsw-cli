@@ -4,7 +4,7 @@ from textwrap import dedent
 from agno.agent import Agent, RunResponse
 from agno.models.google import Gemini
 
-from agent.settings import MODEL_ID
+from agent.settings import GEMINI_MODEL_ID
 from lib.pako import generate_image_dataurl, generate_pako_link
 from lib.utils import download, extract_text_from_pdf, filename, write
 
@@ -104,7 +104,7 @@ mindmapPrompt = """
 
 mindmap_agent = Agent(
     name="Mindmap Agent",
-    model=Gemini(id=MODEL_ID),
+    model=Gemini(id=GEMINI_MODEL_ID),
     description="You are an MermaidJS diagram generator. You can generate stunning MermaidJS diagram codes.",
     instructions=mindmapPrompt,
     markdown=False,
@@ -112,7 +112,7 @@ mindmap_agent = Agent(
 
 summary_agent = Agent(
     name="Summary Agent",
-    model=Gemini(id=MODEL_ID),
+    model=Gemini(id=GEMINI_MODEL_ID),
     description="You are a professional document summarizer. ",
     instructions=[
         "Extract the key information and create concise summaries. "
@@ -153,7 +153,7 @@ summary_agent = Agent(
 
 summary_team = Agent(
     name="Summary Team",
-    model=Gemini(id=MODEL_ID),
+    model=Gemini(id=GEMINI_MODEL_ID),
     team=[mindmap_agent, summary_agent],
     instructions=[
         "First, search hackernews for what the user is asking about.",

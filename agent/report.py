@@ -7,7 +7,7 @@ from agno.models.google import Gemini
 from agno.tools.googlesearch import GoogleSearch
 from pydantic import BaseModel, Field
 
-from agent.settings import MODEL_ID
+from agent.settings import GEMINI_MODEL_ID
 from lib.utils import output_content, send_mail
 
 
@@ -23,7 +23,7 @@ class Config(BaseModel):
 
 research_agent = Agent(
     name="Research Agent",
-    model=Gemini(id=MODEL_ID),
+    model=Gemini(id=GEMINI_MODEL_ID),
     tools=[GoogleSearch(fixed_max_results=20)],
     description="You're a meticulous researcher with a keen eye for detail.",
     instructions=[
@@ -41,7 +41,7 @@ research_agent = Agent(
 def create_analysis_agent(lang: str) -> Agent:
     return Agent(
         name="Analysis Agent",
-        model=Gemini(id=MODEL_ID),
+        model=Gemini(id=GEMINI_MODEL_ID),
         description=dedent("""\
             You're a meticulous analyst (TSW-X) with a keen eye for detail
             and a distinguished AI research scientist with expertise

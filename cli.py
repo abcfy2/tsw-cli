@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from agent.kb import generate_kb_entry, remove_kb_entry
 from agent.report import generate_report
+from agent.research import start_research
 from agent.summary import generate_summary
 
 load_dotenv()
@@ -23,6 +24,17 @@ def report(
     Generate a report for a given topic.
     """
     generate_report(topic, config)
+
+
+@app.command()
+def research(
+    topic: str = typer.Argument(..., help="report topic"),
+    config: str | None = typer.Option(None, help="config file path"),
+):
+    """
+    Generate a deep research report for a given topic.
+    """
+    start_research(topic, config)
 
 
 class SummaryType(str, Enum):
