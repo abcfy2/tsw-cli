@@ -1,2 +1,2 @@
 GEMINI_MODEL_ID = "gemini-2.0-flash"
-GROQ_MODEL_ID = "llama-3.1-8b-instant"
+GROQ_MODEL_ID = "llama3-8b-8192"
