@@ -33,6 +33,11 @@ class SubItems(BaseModel):
     items: List[str]
 
 
+class MidReport(BaseModel):
+    content: str
+    title: str
+
+
 def ask_questions(query: str, n: int) -> SubItems:
     question_agent = Agent(
         name="Question Agent",
@@ -88,6 +93,7 @@ mid_report_agent = Agent(
         "then, group them by subtopics.",
         "finally, generate a mid report based on the information.",
     ],
+    response_model=MidReport,
 )
 
 
@@ -165,8 +171,9 @@ def load_config(config: str | None) -> Config:
 
 def start_research(topic: str, config: str | None):
     c = load_config(config)
+    research_topic = topic
     for i in range(c.deepth):
-        questions = ask_questions(topic, c.breadth)
+        questions = ask_questions(research_topic, c.breadth)
         print(
             f"--------------questions--------------:\n{questions}\n--------------questions--------------"
         )
@@ -177,7 +184,8 @@ def start_research(topic: str, config: str | None):
             research_result.append(search_agent.run(subquery).content)
             time.sleep(5)
         mid_report_result = mid_report_agent.run("\n".join(research_result))
-        thinkings.append(mid_report_result.content)
+        thinkings.append(mid_report_result.content.content)
+        research_topic = mid_report_result.content.title
         time.sleep(5)
     print("--------------generating final report--------------")
     analysisResult = create_analysis_agent(c.lang).run("\n".join(thinkings))
