@@ -1,7 +1,10 @@
 import os
+from typing import List
 
 import fitz
+import markdown
 import requests
+import resend
 from markdown_pdf import MarkdownPdf, Section
 
 output_dir = "output"
@@ -49,3 +52,26 @@ def download(link: str, filename: str) -> None:
 
 def filename(file: str) -> str:
     return ".".join(os.path.basename(file).split(".")[0:-1])
+
+
+def output_content(topic, format, content):
+    if format == "md":
+        write(f"{topic}.md", content)
+    elif format == "pdf":
+        generate_pdf(topic, content)
+    else:
+        print(f"Invalid format({format}). Please choose either 'md' or 'pdf'.")
+
+
+def send_mail(topic: str, receivers: List[str], content: str):
+    html = markdown.markdown(content)
+    resend.api_key = os.getenv("RESEND_API_KEY")
+    email_from = os.getenv("EMAIL_FROM")
+    resend.Emails.send(
+        {
+            "from": email_from,
+            "to": receivers,
+            "subject": topic,
+            "html": html,
+        }
+    )

@@ -1,18 +1,14 @@
 import json
-import os
-import time
 from textwrap import dedent
 from typing import List, Literal
 
-import markdown
-import resend
 from agno.agent import Agent, RunResponse
 from agno.models.google import Gemini
-from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.tools.googlesearch import GoogleSearch
 from pydantic import BaseModel, Field
 
 from agent.settings import MODEL_ID
-from lib.utils import generate_pdf, write
+from lib.utils import output_content, send_mail
 
 
 class Config(BaseModel):
@@ -25,34 +21,17 @@ class Config(BaseModel):
     )
 
 
-class SubTopics(BaseModel):
-    names: List[str]
-
-
-decompose_agent = Agent(
-    name="Decompose Agent",
-    model=Gemini(id=MODEL_ID),
-    description="You're a skilled decomposer with a talent for breaking down complex topics into digestible parts.",
-    instructions=[
-        "Thinking of a topic, break it down into its key components.",
-        "return a list of the key components of the topic.",
-        "the list should be ordered by importance.",
-        "return a maximum of 5 subtopics.",
-    ],
-    show_tool_calls=True,
-    markdown=True,
-    response_model=SubTopics,
-)
-
-
 research_agent = Agent(
     name="Research Agent",
     model=Gemini(id=MODEL_ID),
-    tools=[DuckDuckGoTools(fixed_max_results=10)],
-    description="You're a seasoned researcher with a knack for uncovering the latest developments in a given topic.",
+    tools=[GoogleSearch(fixed_max_results=20)],
+    description="You're a meticulous researcher with a keen eye for detail.",
     instructions=[
-        "Known for your ability to find the most relevant information and present it in a clear and concise manner.",
-        "Always include links in the output",
+        "first, for the given topic, think it in different aspects and generate 6 new topics.",
+        "the subtopics should cover time, location, weather, economy, application and technology.",
+        "then, search each subtopic with the given tool to gather information.",
+        "finally, combine all the information and group them by subtopics.",
+        "include the sources in a separate section.",
     ],
     show_tool_calls=True,
     markdown=True,
@@ -126,18 +105,7 @@ def create_analysis_agent(lang: str) -> Agent:
 
 
 def research(topic: str) -> str:
-    result: RunResponse = decompose_agent.run(topic)
-    subTopics = result.content
-    research = []
-    for sub_topic in subTopics:
-        research.append(
-            research_agent.run(
-                f"What are the latest developments in {sub_topic}"
-            ).content
-        )
-        # rate limiting
-        time.sleep(1)
-    return "\n".join(research)
+    return research_agent.run(topic).content
 
 
 def generate_report(topic: str, config: str | None):
@@ -149,29 +117,6 @@ def generate_report(topic: str, config: str | None):
         c = Config.model_validate(json_data)
     researchResult = research(topic)
     analysisResult: RunResponse = create_analysis_agent(c.lang).run(researchResult)
-    _output_report(topic, c.format, analysisResult.content)
+    output_content(topic, c.format, analysisResult.content)
     if c.receivers:
-        _send_report(topic, c.receivers, analysisResult.content)
-
-
-def _output_report(topic, format, content):
-    if format == "md":
-        write(f"{topic}.md", content)
-    elif format == "pdf":
-        generate_pdf(topic, content)
-    else:
-        print(f"Invalid format({format}). Please choose either 'md' or 'pdf'.")
-
-
-def _send_report(topic: str, receivers: List[str], content: str):
-    html = markdown.markdown(content)
-    resend.api_key = os.getenv("RESEND_API_KEY")
-    email_from = os.getenv("EMAIL_FROM")
-    resend.Emails.send(
-        {
-            "from": email_from,
-            "to": receivers,
-            "subject": topic,
-            "html": html,
-        }
-    )
+        send_mail(topic, c.receivers, analysisResult.content)
