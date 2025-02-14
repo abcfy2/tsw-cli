@@ -5,7 +5,9 @@ import fitz
 import markdown
 import requests
 import resend
+from googlesearch import search
 from markdown_pdf import MarkdownPdf, Section
+from markdownify import markdownify as md
 
 output_dir = "output"
 os.makedirs(output_dir, exist_ok=True)
@@ -75,3 +77,27 @@ def send_mail(topic: str, receivers: List[str], content: str):
             "html": html,
         }
     )
+
+
+def search_topic(topic: str, num_results=10) -> List[str]:
+    search_results = []
+    result = search(topic, num_results=num_results, unique=True, sleep_interval=1)
+    for link in result:
+        content = fetch_content_as_md(link)
+        if content:
+            search_results.append(content)
+    return search_results
+
+
+def fetch_content_as_md(url: str) -> str | None:
+    try:
+        r = requests.get(url)
+        return md(r.text)
+    except Exception:
+        print(f"Failed to fetch content from {url}")
+
+
+def truncate_prompt(prompt: str, max_tokens: int, truncator) -> str:
+    if len(prompt) > max_tokens:
+        prompt = truncator(prompt, max_tokens)
+    return prompt
