@@ -92,6 +92,9 @@ def search_topic(topic: str, num_results=10) -> List[str]:
 def fetch_content_as_md(url: str) -> str | None:
     try:
         r = requests.get(url)
+        if "text/html" not in r.headers.get("content-type"):
+            return None
+
         return md(r.text)
     except Exception:
         print(f"Failed to fetch content from {url}")

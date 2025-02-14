@@ -80,7 +80,7 @@ mindmapPrompt = """
               Pen and paper
               Mermaid
 
-        The max deepth of the generated mindmap should be 4.
+        The max depth of the generated mindmap should be 4.
 
         The output syntax should be correct. Try to avoid the following common errors:
         - never use " in the output

@@ -14,6 +14,7 @@ from agent.settings import GEMINI_MODEL_ID, GROQ_MODEL_ID
 from lib.utils import output_content, search_topic, send_mail
 
 learnings: List[str] = []
+insights: List[str] = []
 generated_queries: List[str] = []
 
 system_prompt = dedent("""\
@@ -33,7 +34,7 @@ You are an expert researcher. Follow these instructions when responding:
 
 
 class Config(BaseModel):
-    deepth: int = Field(default=2, description="Deepth of the research")
+    depth: int = Field(default=2, description="Depth of the research")
     breadth: int = Field(default=1, description="Breadth of the research")
     lang: str = Field(default="english", description="Language for the report")
     receivers: List[str] | None = Field(
@@ -44,15 +45,15 @@ class Config(BaseModel):
     )
 
 
-def summary_learnings(topic: str, max_length: int) -> str:
+def summary_learnings(topic: str, max_length: int):
     if not learnings:
         return ""
 
-    print("--------------summarizing learnings--------------")
-
+    print("-------summarizing learning-------------->")
+    all_learnings = "\n".join(learnings)
     reader = Agent(
         name="Reader Agent",
-        model=Gemini(id=Gemini),
+        model=Gemini(id=GEMINI_MODEL_ID),
         description="you are an expert reader and can extract the key points from the text.",
         instructions=[
             "extract the key points related to the topic from the given text.",
@@ -61,8 +62,8 @@ def summary_learnings(topic: str, max_length: int) -> str:
             f"the maximum length of the summary is {max_length} characters.",
         ],
     )
-    all_learnings = "\n".join(learnings)
-    return reader.run(f"Topic:\n{topic}\nLearnings:\n{all_learnings}").content
+    insights.append(reader.run(f"Topic:\n{topic}\nLearnings:\n{all_learnings}").content)
+    learnings.clear()
 
 
 def plan_research(topic: str) -> str:
@@ -82,7 +83,7 @@ def plan_research(topic: str) -> str:
     )
     try:
         result = planner.run(
-            f"Research Topic:\n{topic}\nWhat I have learnt:\n{summary_learnings(learnings, 500)}\nOld Query Keywords:\n{generated_queries}"
+            f"Research Topic:\n{topic}\nWhat I have learnt:\n{insights}\nOld Query Keywords:\n{generated_queries}"
         ).content
         generated_queries.append(result)
     except Exception as e:
@@ -91,7 +92,7 @@ def plan_research(topic: str) -> str:
     return result
 
 
-def read_articles(topic: str, articles: List[str]):
+def read_articles(topic: str, articles: List[str], max_length: int):
     analyst = Agent(
         name="Analyst Agent",
         model=Gemini(id=GEMINI_MODEL_ID),
@@ -101,14 +102,14 @@ def read_articles(topic: str, articles: List[str]):
             "include the citations and links which are relevant to the topic.",
             "ignore the unrelated information.",
             "generate a mid-report based on the gathered information.",
-            "the report should be clear and concise.",
+            f"the report should be clear and concise, the whole content should be less than {max_length} characters.",
         ],
         markdown=True,
     )
     for article in articles:
-        print("--------------reading article--------------")
+        print("---Reading article-------------->")
         learnings.append(analyst.run(f"Topic:\n{topic}\nArticles:\n{article}").content)
-        time.sleep(2)
+        time.sleep(5)
 
 
 def write_final_report(topic: str, lang: str) -> str:
@@ -161,7 +162,7 @@ def write_final_report(topic: str, lang: str) -> str:
         markdown=True,
         add_datetime_to_instructions=True,
     )
-    return researcher.run(f"Topic:\n{topic}\nMy Learnings:\n{learnings}").content
+    return researcher.run(f"Topic:\n{topic}\nMy Learnings:\n{insights}").content
 
 
 def load_config(config: str | None) -> Config:
@@ -174,18 +175,19 @@ def load_config(config: str | None) -> Config:
 
 def start_research(topic: str, config: str | None):
     c = load_config(config)
-    for i in range(c.deepth):
-        print(f"--------------researching deepth {i + 1}--------------")
+    for i in range(c.depth):
+        print(f"Researching Depth {i + 1} ---------------->")
         plan = plan_research(topic)
         if not plan:
-            print("No plan to search for, ignoring this deepth.")
+            print("No plan to search for, ignoring this depth.")
             continue
         print(f"Searching for: {plan}")
         articles = search_topic(plan, c.breadth)
-        read_articles(topic, articles)
-    print("--------------generating final report--------------")
-    if not learnings:
-        print("No learnings to generate a report, exiting.")
+        read_articles(topic, articles, 500)
+        summary_learnings(topic, 250)
+    print("Generating Final Report ------------------>")
+    if not insights:
+        print("No insights to generate a report, exiting.")
         return
     report = write_final_report(topic, c.lang)
     output_content(topic, c.format, report)
