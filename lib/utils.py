@@ -69,18 +69,21 @@ def send_mail(topic: str, receivers: List[str], content: str):
     html = markdown.markdown(content)
     resend.api_key = os.getenv("RESEND_API_KEY")
     email_from = os.getenv("EMAIL_FROM")
-    resend.Emails.send({
-        "from": email_from,
-        "to": receivers,
-        "subject": topic,
-        "html": html,
-    })
+    resend.Emails.send(
+        {
+            "from": email_from,
+            "to": receivers,
+            "subject": topic,
+            "html": html,
+        }
+    )
 
 
 def search_topic(topic: str, num_results=10) -> List[str]:
     search_results = []
     result = search(topic, num_results=num_results, unique=True, sleep_interval=1)
     for link in result:
+        print(f"Fetching content from {link}")
         content = fetch_content_as_md(link)
         if content:
             search_results.append(content)
@@ -89,7 +92,7 @@ def search_topic(topic: str, num_results=10) -> List[str]:
 
 def fetch_content_as_md(url: str) -> str | None:
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=5)
         content_type: str = (
             r.headers["content-type"].lower() if "content-type" in r.headers else ""
         )
