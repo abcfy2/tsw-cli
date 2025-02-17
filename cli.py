@@ -5,7 +5,6 @@ import typer
 from dotenv import load_dotenv
 
 from agent.kb import generate_kb_entry, remove_kb_entry
-from agent.report import generate_report
 from agent.research import start_research
 from agent.summary import generate_summary
 
@@ -13,17 +12,6 @@ load_dotenv()
 
 app = typer.Typer(help="a command line interface for your tiny smart workers.")
 kb_app = typer.Typer(help="Commands related to the knowledge base.")
-
-
-@app.command()
-def report(
-    topic: str = typer.Argument(..., help="report topic"),
-    config: str | None = typer.Option(None, help="config file path"),
-):
-    """
-    Generate a report for a given topic.
-    """
-    generate_report(topic, config)
 
 
 @app.command()
