@@ -34,6 +34,7 @@ You are an expert researcher. Follow these instructions when responding:
 
 
 class Config(BaseModel):
+    hints: list[str] = Field(default=[], description="hints for the task")
     depth: int = Field(default=2, description="Depth of the research")
     breadth: int = Field(default=1, description="Breadth of the research")
     lang: str = Field(default="english", description="Language for the report")
@@ -54,7 +55,7 @@ def summary_learnings(topic: str, max_length: int):
     reader = Agent(
         name="Reader Agent",
         model=Gemini(id=GEMINI_MODEL_ID),
-        description="you are an expert reader and can extract the key points from the text.",
+        description="you are an insightful reader and can extract the key points from the text.",
         instructions=[
             "extract the key points related to the topic from the given text.",
             "don't include the irrelevant information.",
@@ -66,25 +67,34 @@ def summary_learnings(topic: str, max_length: int):
     learnings.clear()
 
 
-def plan_research(topic: str) -> str:
+def plan_research(topic: str, hints: List[str] = []) -> str:
     planner = Agent(
         name="Planner Agent",
         model=Groq(id=GROQ_MODEL_ID),
         description=system_prompt,
         instructions=[
-            "generate a google query based on a given topic and what you have learnt.",
-            "it must be one simple but related keywords. note, they're for google search, not for the user.",
-            "it must stick to the given topic and your learnings, don't be off-topic.",
-            "when generate the keywords, consider the user's needs and the old queries. don't repeat yourself.",
-            "user will provide the topic, learnings and old query keywords.",
-            "return a simple string only, no explanation and other information.",
-            "it's okay to generate an empty list.",
+            "you will be given a research topic and some hints, generate a google search query based on them.",
+            "you will also be given the history of previous queries and what you have learnt.",
+            "don't repeat the same or similar queries, try to generate new ones.",
+            "use what you have learnt to inspire you to generate new queries.",
+            "the generated query should be relevant to the topic and the hints, it can be creative but shouldn't be off-topic.",
+            "the generated query should be several keywords for a google search.",
+            "only return the generated query, no other information or explanation.",
         ],
     )
     try:
-        result = planner.run(
-            f"Research Topic:\n{topic}\nWhat I have learnt:\n{insights}\nOld Query Keywords:\n{generated_queries}"
-        ).content
+        goal: str = (
+            f"Research Topic:\n{topic}\nWhat I have learnt:\n{','.join(insights)}"
+            if insights
+            else f"Research Topic:\n{topic}"
+        )
+        h: str = f"\nHints:\n{','.join(hints)}" if hints else ""
+        history: str = (
+            f"\nOld Query Keywords:\n{','.join(generated_queries)}"
+            if generated_queries
+            else ""
+        )
+        result = planner.run(f"{goal}{h}{history}").content
         generated_queries.append(result)
     except Exception as e:
         print(e)
@@ -177,7 +187,7 @@ def start_research(topic: str, config: str | None):
     c = load_config(config)
     for i in range(c.depth):
         print(f"Researching Depth {i + 1} ---------------->")
-        plan = plan_research(topic)
+        plan = plan_research(topic, c.hints)
         if not plan:
             print("No plan to search for, ignoring this depth.")
             continue
