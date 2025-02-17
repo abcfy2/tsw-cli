@@ -11,7 +11,7 @@ from agno.models.groq import Groq
 from pydantic import BaseModel, Field
 
 from agent.settings import GEMINI_MODEL_ID, GROQ_MODEL_ID
-from lib.utils import output_content, search_topic, send_mail
+from lib.utils import get_block_body, output_content, search_topic, send_mail
 
 learnings: List[str] = []
 insights: List[str] = []
@@ -189,7 +189,7 @@ def start_research(topic: str, config: str | None):
     if not insights:
         print("No insights to generate a report, exiting.")
         return
-    report = write_final_report(topic, c.lang)
+    report = get_block_body(write_final_report(topic, c.lang))
     output_content(topic, c.format, report)
     if c.receivers:
         send_mail(topic, c.receivers, report)

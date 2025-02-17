@@ -6,7 +6,7 @@ from agno.models.google import Gemini
 
 from agent.settings import GEMINI_MODEL_ID
 from lib.pako import generate_image_dataurl, generate_pako_link
-from lib.utils import download, extract_text_from_pdf, filename, write
+from lib.utils import download, extract_text_from_pdf, filename, get_block_body, write
 
 mindmapPrompt = """
         Based on the given article:
@@ -198,8 +198,7 @@ def _generate_mindmap(text: str) -> str:
 
 
 def _generate_text(text: str) -> str:
-    result: RunResponse = summary_agent.run(text)
-    return result.content
+    return get_block_body(summary_agent.run(text).content)
 
 
 def _generate_both(text: str) -> tuple:
@@ -211,5 +210,4 @@ def _generate_both(text: str) -> tuple:
 def _clean_text(text: str):
     pattern = r"\s*\([^()]*?\)\s*(?=:|\w|\s|$)"
     text = re.sub(pattern, " ", text)
-    text = "\n".join(text.split("\n")[1:-1])
-    return text
+    return get_block_body(text)

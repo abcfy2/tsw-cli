@@ -115,3 +115,10 @@ def truncate_prompt(prompt: str, max_tokens: int, truncator) -> str:
     if len(prompt) > max_tokens:
         prompt = truncator(prompt, max_tokens)
     return prompt
+
+
+def get_block_body(text: str) -> str:
+    # Remove the first and last lines for ``` blocks in markdown ```
+    if text.startswith("```") and text.endswith("```"):
+        return "\n".join(text.split("\n")[1:-1])
+    return text

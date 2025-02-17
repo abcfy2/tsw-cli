@@ -2,13 +2,13 @@ import json
 from textwrap import dedent
 from typing import List, Literal
 
-from agno.agent import Agent, RunResponse
+from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.tools.googlesearch import GoogleSearch
 from pydantic import BaseModel, Field
 
 from agent.settings import GEMINI_MODEL_ID
-from lib.utils import output_content, send_mail
+from lib.utils import get_block_body, output_content, send_mail
 
 
 class Config(BaseModel):
@@ -116,7 +116,7 @@ def generate_report(topic: str, config: str | None):
             json_data = json.load(file)
         c = Config.model_validate(json_data)
     researchResult = research(topic)
-    analysisResult: RunResponse = create_analysis_agent(c.lang).run(researchResult)
-    output_content(topic, c.format, analysisResult.content)
+    report = get_block_body(create_analysis_agent(c.lang).run(researchResult))
+    output_content(topic, c.format, report)
     if c.receivers:
-        send_mail(topic, c.receivers, analysisResult.content)
+        send_mail(topic, c.receivers, report)

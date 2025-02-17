@@ -126,9 +126,10 @@ cython_debug/
 # db files
 *.db
 
-# tmp dir
+# tmp dirs/files
 tmp
 .DS_Store
+*.out
 
 # data dir
 output
