@@ -66,13 +66,13 @@ def refresh(
 
 @kb_app.command()
 def remove(
-    file: str = typer.Argument(..., help="File for KB entry"),
+    name: str = typer.Argument(..., help="name for KB entry"),
     config: str = typer.Option(None, help="config file path"),
 ):
     """
     Delete a knowledge base entry.
     """
-    remove_kb_entry(file, config)
+    remove_kb_entry(name, config)
 
 
 @app.command()

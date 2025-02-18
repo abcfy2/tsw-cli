@@ -4,8 +4,7 @@ from agno.embedder.google import GeminiEmbedder
 from agno.knowledge.pdf import PDFKnowledgeBase, PDFReader
 from agno.vectordb.pgvector import PgVector
 from pydantic import BaseModel, Field
-
-from lib.utils import filename
+from sqlalchemy.sql.expression import delete
 
 
 class Config(BaseModel):
@@ -38,12 +37,12 @@ def _load_config(config):
 
 
 def remove_kb_entry(
-    resourceUrl: str,
+    name: str,
     config: Config,
 ):
     c = _load_config(config)
     kb = PDFKnowledgeBase(
-        path=resourceUrl,
+        path=".",
         vector_db=PgVector(
             table_name="pdf_documents",
             db_url=c.pg_url,
@@ -51,9 +50,16 @@ def remove_kb_entry(
         ),
         reader=PDFReader(chunk=True),
     )
-    name = filename(resourceUrl)
     if not kb.vector_db.name_exists(name):
         print(f"No such entry: {name}")
         return
 
-    # TODO: Remove the entry in the database
+    try:
+        db = kb.vector_db
+        with db.Session() as sess, sess.begin():
+            stmt = delete(db.table).where(db.table.c.name == name)
+            sess.execute(stmt)
+            sess.commit()
+    except Exception as e:
+        print(f"Error getting count from table '{db.table.fullname}': {e}")
+        sess.rollback()
