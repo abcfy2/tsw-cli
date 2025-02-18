@@ -16,6 +16,7 @@ from lib.utils import get_block_body, output_content, search_topic, send_mail
 learnings: List[str] = []
 insights: List[str] = []
 generated_queries: List[str] = []
+references: List[str] = []
 
 system_prompt = dedent("""\
 You are an expert researcher. Follow these instructions when responding:
@@ -109,7 +110,7 @@ def read_articles(topic: str, articles: List[str], max_length: int):
         description=system_prompt,
         instructions=[
             "learn the information related to the research topic in the articles.",
-            "include the citations and links which are relevant to the topic.",
+            "include the citations which are relevant to the topic.",
             "ignore the unrelated information.",
             "generate a mid-report based on the gathered information.",
             f"the report should be clear and concise, the whole content should be less than {max_length} characters.",
@@ -172,7 +173,9 @@ def write_final_report(topic: str, lang: str) -> str:
         markdown=True,
         add_datetime_to_instructions=True,
     )
-    return researcher.run(f"Topic:\n{topic}\nMy Learnings:\n{insights}").content
+    return researcher.run(
+        f"Topic:\n{topic}\nMy Learnings:\n{insights}\nReferences:\n{references}"
+    ).content
 
 
 def load_config(config: str | None) -> Config:
@@ -192,8 +195,9 @@ def start_research(topic: str, config: str | None):
             print("No plan to search for, ignoring this depth.")
             continue
         print(f"Searching for: {plan}")
-        articles = search_topic(plan, c.breadth)
-        read_articles(topic, articles, 500)
+        results = search_topic(plan, c.breadth, references)
+        references.extend(results["links"])
+        read_articles(topic, results["articles"], 500)
         summary_learnings(topic, 250)
     print("Generating Final Report ------------------>")
     if not insights:

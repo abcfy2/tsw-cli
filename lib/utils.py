@@ -79,15 +79,25 @@ def send_mail(topic: str, receivers: List[str], content: str):
     )
 
 
-def search_topic(topic: str, num_results=10) -> List[str]:
-    search_results = []
+def search_topic(
+    topic: str, num_results=10, visited_links: List[str] = []
+) -> List[str]:
+    results: dict = {
+        "links": [],
+        "articles": [],
+    }
     result = search(topic, num_results=num_results, unique=True, sleep_interval=1)
     for link in result:
+        if link in visited_links:
+            print(f"Skipping already visited link: {link}")
+            continue
+
         print(f"Fetching content from {link}")
         content = fetch_content_as_md(link)
         if content:
-            search_results.append(content)
-    return search_results
+            results["links"].append(link)
+            results["articles"].append(content)
+    return results
 
 
 def fetch_content_as_md(url: str) -> str | None:
