@@ -103,6 +103,10 @@ def search_topic(
 def fetch_content_as_md(url: str) -> str | None:
     try:
         r = requests.get(url, timeout=5)
+        if r.status_code != 200:
+            print(f"Failed to fetch content from {url}")
+            return None
+
         content_type: str = (
             r.headers["content-type"].lower() if "content-type" in r.headers else ""
         )

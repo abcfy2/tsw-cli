@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from agent.kb import generate_kb_entry, remove_kb_entry
 from agent.research import start_research
 from agent.summary import generate_summary
+from agent.think import deep_think
 
 load_dotenv()
 
@@ -23,6 +24,17 @@ def research(
     Generate a deep research report for a given topic.
     """
     start_research(topic, config)
+
+
+@app.command()
+def think(
+    link: str = typer.Argument(..., help="the link to think about"),
+    config: str | None = typer.Option(None, help="config file path"),
+):
+    """
+    Deeply think about a given link.
+    """
+    deep_think(link, config)
 
 
 class SummaryType(str, Enum):
