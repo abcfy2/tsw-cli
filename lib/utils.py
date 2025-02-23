@@ -102,7 +102,7 @@ def search_topic(
 
 def fetch_content_as_md(url: str) -> str | None:
     try:
-        r = requests.get(url, timeout=5)
+        r = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
         if r.status_code != 200:
             print(f"Failed to fetch content from {url}")
             return None
