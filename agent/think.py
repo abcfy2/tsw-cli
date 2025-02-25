@@ -50,6 +50,7 @@ modes = {
 
 
 class Config(BaseModel):
+    link: str = Field(description="Link to think about")
     mode: Literal["critical", "faq"] = Field(
         default=["critical"], description="thinking mode"
     )
@@ -113,16 +114,15 @@ def output_thinking(link: str, config: Config) -> str:
     return f"# Thinking(Mode: {config.mode}) on {link}\n\n{body}"
 
 
-def load_config(config: str | None) -> Config:
-    if config is None:
-        return Config()
+def load_config(config: str) -> Config:
     with open(config, "r") as file:
         json_data = json.load(file)
     return Config.model_validate(json_data)
 
 
-def deep_think(link: str, config: str | None):
+def deep_think(config: str):
     c = load_config(config)
+    link = c.link
     article = fetch_content_as_md(link)
     if not article:
         print(f"Failed to fetch the content from {link}, exiting.")

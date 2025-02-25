@@ -38,6 +38,11 @@ def write(filename: str, markdown: str, append=False) -> None:
         f.write(markdown)
 
 
+def read(filename: str) -> str:
+    with open(filename, "r") as f:
+        return f.read()
+
+
 def extract_text_from_pdf(file: str) -> str:
     doc = fitz.open(file)
     text = ""
@@ -81,7 +86,7 @@ def send_mail(topic: str, receivers: List[str], content: str):
 
 def search_topic(
     topic: str, num_results=10, visited_links: List[str] = []
-) -> List[str]:
+) -> List[dict]:
     results: dict = {
         "links": [],
         "articles": [],

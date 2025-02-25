@@ -35,6 +35,7 @@ You are an expert researcher. Follow these instructions when responding:
 
 
 class Config(BaseModel):
+    topic: str = Field(description="Research topic")
     hints: list[str] = Field(default=[], description="hints for the task")
     depth: int = Field(default=2, description="Depth of the research")
     breadth: int = Field(default=1, description="Breadth of the research")
@@ -178,16 +179,15 @@ def write_final_report(topic: str, lang: str) -> str:
     ).content
 
 
-def load_config(config: str | None) -> Config:
-    if config is None:
-        return Config()
+def load_config(config: str) -> Config:
     with open(config, "r") as file:
         json_data = json.load(file)
     return Config.model_validate(json_data)
 
 
-def start_research(topic: str, config: str | None):
+def start_research(config: str):
     c = load_config(config)
+    topic = c.topic
     for i in range(c.depth):
         print(f"Researching Depth {i + 1} ---------------->")
         plan = plan_research(topic, c.hints)

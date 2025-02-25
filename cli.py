@@ -8,6 +8,7 @@ from agent.kb import generate_kb_entry, remove_kb_entry
 from agent.research import start_research
 from agent.summary import generate_summary
 from agent.think import deep_think
+from agent.writer import write_article
 
 load_dotenv()
 
@@ -17,24 +18,32 @@ kb_app = typer.Typer(help="Commands related to the knowledge base.")
 
 @app.command()
 def research(
-    topic: str = typer.Argument(..., help="report topic"),
-    config: str | None = typer.Option(None, help="config file path"),
+    config: str = typer.Argument(..., help="config file path"),
 ):
     """
     Generate a deep research report for a given topic.
     """
-    start_research(topic, config)
+    start_research(config)
 
 
 @app.command()
 def think(
-    link: str = typer.Argument(..., help="the link to think about"),
-    config: str | None = typer.Option(None, help="config file path"),
+    config: str = typer.Argument(..., help="config file path"),
 ):
     """
     Deeply think about a given link.
     """
-    deep_think(link, config)
+    deep_think(config)
+
+
+@app.command()
+def write(
+    config: str = typer.Argument(None, help="config file path"),
+):
+    """
+    Write a new article.
+    """
+    write_article(config)
 
 
 class SummaryType(str, Enum):
@@ -44,7 +53,7 @@ class SummaryType(str, Enum):
 
 
 @app.command()
-def summary(
+def summarise(
     file: str = typer.Argument(..., help="File to generate a summary for"),
     type: SummaryType = typer.Option("mindmap", help="Summary type to generate"),
 ):
