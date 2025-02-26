@@ -5,8 +5,8 @@ A command line interface for your tiny smart workers.
 ## How to Run
 
 1. configure your environment
-1. `poetry install`
-1. `poetry shell`
+1. `uv sync`
+1. `source .venv/bin/activate`
 1. `python cli.py`
 
 Note:
