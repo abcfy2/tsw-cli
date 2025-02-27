@@ -4,7 +4,7 @@ from enum import Enum
 import typer
 from dotenv import load_dotenv
 
-from agent.kb import generate_kb_entry, remove_kb_entry
+from agent.kb import generate_kb_entry, list_kb_entries, remove_kb_entry
 from agent.research import start_research
 from agent.summary import generate_summary
 from agent.think import deep_think
@@ -64,6 +64,16 @@ def summarise(
 
 
 @kb_app.command()
+def list(
+    config: str = typer.Argument(None, help="config file path"),
+):
+    """
+    List all knowledge base entries
+    """
+    list_kb_entries(config)
+
+
+@kb_app.command()
 def create(
     file: str = typer.Argument(..., help="File for KB entry"),
     config: str = typer.Option(None, help="config file path"),
@@ -99,9 +109,9 @@ def remove(
 @app.command()
 def kb():
     """
-    Generate a knowledge base.
+    Commands related to the knowledge base.
     """
-    typer.echo("Knowledge Base")
+    pass
 
 
 app.add_typer(kb_app, name="kb")

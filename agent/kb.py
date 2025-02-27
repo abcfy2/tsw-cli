@@ -4,7 +4,7 @@ from agno.embedder.google import GeminiEmbedder
 from agno.knowledge.pdf import PDFKnowledgeBase, PDFReader
 from agno.vectordb.pgvector import PgVector
 from pydantic import BaseModel, Field
-from sqlalchemy.sql.expression import delete
+from sqlalchemy.sql.expression import delete, select
 
 
 class Config(BaseModel):
@@ -12,7 +12,25 @@ class Config(BaseModel):
     pg_url: str = Field(description="KB database URL")
 
 
-def generate_kb_entry(resourceUrl: str, config: Config, upsert=False):
+def list_kb_entries(config: str):
+    c = _load_config(config)
+    db: PgVector = PgVector(
+        table_name="pdf_documents",
+        db_url=c.pg_url,
+        embedder=GeminiEmbedder(),
+    )
+
+    try:
+        with db.Session() as sess, sess.begin():
+            stmt = select(db.table.c.name).distinct()
+            result = sess.execute(stmt)
+            for row in result:
+                print(row[0])
+    except Exception as e:
+        print(f"Error getting document names from table '{db.table.fullname}': {e}")
+
+
+def generate_kb_entry(resourceUrl: str, config: str, upsert=False):
     c = _load_config(config)
     kb = PDFKnowledgeBase(
         path=resourceUrl,
@@ -29,7 +47,7 @@ def generate_kb_entry(resourceUrl: str, config: Config, upsert=False):
     )
 
 
-def _load_config(config):
+def _load_config(config: str):
     with open(config, "r") as file:
         json_data = json.load(file)
     c = Config.model_validate(json_data)
@@ -38,24 +56,19 @@ def _load_config(config):
 
 def remove_kb_entry(
     name: str,
-    config: Config,
+    config: str,
 ):
     c = _load_config(config)
-    kb = PDFKnowledgeBase(
-        path=".",
-        vector_db=PgVector(
-            table_name="pdf_documents",
-            db_url=c.pg_url,
-            embedder=GeminiEmbedder(),
-        ),
-        reader=PDFReader(chunk=True),
+    db: PgVector = PgVector(
+        table_name="pdf_documents",
+        db_url=c.pg_url,
+        embedder=GeminiEmbedder(),
     )
-    if not kb.vector_db.name_exists(name):
+    if not db.name_exists(name):
         print(f"No such entry: {name}")
         return
 
     try:
-        db = kb.vector_db
         with db.Session() as sess, sess.begin():
             stmt = delete(db.table).where(db.table.c.name == name)
             sess.execute(stmt)
