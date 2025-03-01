@@ -80,7 +80,7 @@ mindmapPrompt = """
               Pen and paper
               Mermaid
 
-        The max depth of the generated mindmap should be 4.
+        The max depth of the generated mindmap should be 3.
 
         The output syntax should be correct. Try to avoid the following common errors:
         - never use " in the output
@@ -132,6 +132,9 @@ summary_agent = Agent(
 
     ## Key Findings
     {Major discoveries in the text}
+
+    ## Improvements And Creativity
+    {Main improvements and creativity in the text}
 
     ## Insights
     {Your insights on the text}
@@ -208,6 +211,19 @@ def _generate_both(text: str) -> tuple:
 
 
 def _clean_text(text: str):
-    pattern = r"\s*\([^()]*?\)\s*(?=:|\w|\s|$)"
-    text = re.sub(pattern, " ", text)
-    return get_block_body(text)
+    text = get_block_body(text)
+    lines = []
+    for line in text.split("\n"):
+        if "root((" in line:
+            pattern = r"(\(\([^()]*?)\s+\([^()]*?\)(.*?\)\))"
+
+            def replacer(match):
+                return f"{match.group(1)}{match.group(2)}"
+
+            line = re.sub(pattern, replacer, line)
+        else:
+            pattern = r"\s*\([^()]*?\)\s*(?=:|\w|\s)"
+            line = re.sub(pattern, "", line)
+        lines.append(line)
+
+    return "\n".join(lines)
