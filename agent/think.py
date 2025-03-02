@@ -8,7 +8,7 @@ from agno.models.google import Gemini
 from pydantic import BaseModel, Field
 
 from agent.settings import GEMINI_MODEL_ID
-from lib.utils import fetch_content_as_md, output_content, send_mail
+from lib.utils import fetch_content_as_md, get_block_body, output_content, send_mail
 
 question_history: List[str] = []
 thinking_history: List[str] = []
@@ -33,7 +33,7 @@ modes = {
     "faq": {
         "reader": dedent("""\
             You're a reader trying to understand the aticle and learn more about it.
-            At the same time, you will be given the question history and answer history.
+            You will be given an article, the question history and answer history.
             You must ask 5 questions based on the given information, remember don't repeat the same or similar questions.
             each question should be clear and concise.
             output questions only, no explanation or unnecessary information.\
@@ -104,14 +104,30 @@ def answer_questions(
     return answers
 
 
-def output_thinking(link: str, config: Config) -> str:
-    body = "\n".join(
+def output_thinking() -> str:
+    return "\n".join(
         [
             f"## Question:\n\n {question}\n\n## Answer: \n\n{answer}"
             for question, answer in zip(question_history, thinking_history)
         ]
     )
-    return f"# Thinking(Mode: {config.mode}) on {link}\n\n{body}"
+
+
+def format_thinking(content: str, config: Config) -> str:
+    formatter = Agent(
+        name="formatter Agent",
+        model=Gemini(id=GEMINI_MODEL_ID),
+        description="You are a excellent formatter.",
+        instructions=[
+            "you will be given a document with questions and answers, please format it properly:",
+            "1. keep each question and answer pair in a separate section with correct numbering.",
+            "2. the meaning of questions and answers should not be changed.",
+            f"3. the document should be written in {config.lang}, translate the content if necessary but ignore the code and the abbreviations",
+            "4. only the formatted document, no additional information.",
+        ],
+        markdown=True,
+    )
+    return formatter.run(content).content
 
 
 def load_config(config: str) -> Config:
@@ -142,7 +158,11 @@ def deep_think(config: str):
         print("No questions or answers to output, exiting.")
         return
 
-    content = output_thinking(link, c)
+    content = output_thinking()
+
+    print("Formatting ------------------>")
+    content = get_block_body(format_thinking(content, c))
+    content = f"# Thinking(Mode: {c.mode}) on {link}\n\n{content}"
     topic = f"{c.mode}{int(time.time())}"
     output_content(topic, c.format, content)
     if c.receivers:
