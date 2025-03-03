@@ -113,11 +113,12 @@ mindmap_agent = Agent(
 summary_agent = Agent(
     name="Summary Agent",
     model=Gemini(id=GEMINI_MODEL_ID),
-    description="You are a professional document summarizer. ",
+    description="You are a good paper reader and need to explain what you have read to others.",
     instructions=[
-        "Extract the key information and create concise summaries. "
-        "Focus on the main ideas and important details. "
-        "Be clear and accurate in your summaries."
+        "1. find the main points of the document.",
+        "2. for each main point, provide a informative summary and explain the implementation if needed.",
+        "3. for each complex concept, provide a brief explanation.",
+        "4. make the whole summary readable and engaging.",
     ],
     expected_output=dedent("""\
     A concise summary in markdown format:
@@ -127,11 +128,18 @@ summary_agent = Agent(
     ## Summary
     {Brief overview of key findings and significance}
 
-    ## Main Points
-    {Key points extracted from the text}
+    ## Terminology
+    - {Term 1}: {Definition}
+    - {Term 2}: {Definition}
 
-    ## Key Findings
-    {Major discoveries in the text}
+    ## Main Points
+    ### Point 1
+    {Main point 1}
+    {Explanation or implementation}
+
+    ### Point 2
+    {Main point 2}
+    {Explanation or implementation}
 
     ## Improvements And Creativity
     {Main improvements and creativity in the text}
