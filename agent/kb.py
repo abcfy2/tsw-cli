@@ -24,8 +24,9 @@ def list_kb_entries(config: str):
         with db.Session() as sess, sess.begin():
             stmt = select(db.table.c.name).distinct()
             result = sess.execute(stmt)
-            for row in result:
-                print(row[0])
+            entries = "\n".join([row[0] for row in result])
+            print(entries)
+            return entries
     except Exception as e:
         print(f"Error getting document names from table '{db.table.fullname}': {e}")
 
