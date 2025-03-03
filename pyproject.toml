@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 authors = [
     {name = "foxgem", email = "jianhgreat@hotmail.com"},
@@ -30,3 +34,14 @@ name = "tsw-cli"
 version = "0.1.0"
 description = "tsw-cli"
 readme = "README.md"
+
+[dependency-groups]
+dev = [
+    "tsw-cli",
+]
+
+[tool.uv.sources]
+tsw-cli = { workspace = true }
+
+[tool.setuptools]
+packages = ["lib", "agent"]

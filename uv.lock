@@ -948,7 +948,7 @@ wheels = [
 [[package]]
 name = "tsw-cli"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "agno" },
     { name = "duckduckgo-search" },
@@ -970,6 +970,11 @@ dependencies = [
     { name = "resend" },
     { name = "sqlalchemy" },
     { name = "typer" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "tsw-cli" },
 ]
 
 [package.metadata]
@@ -995,6 +1000,9 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.38,<3.0.0" },
     { name = "typer", specifier = ">=0.15.1,<1.0.0" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "tsw-cli", editable = "." }]
 
 [[package]]
 name = "typer"
