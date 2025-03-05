@@ -43,6 +43,10 @@ def read(filename: str) -> str:
         return f.read()
 
 
+def exist(file: str) -> bool:
+    return os.path.exists(file)
+
+
 def extract_text_from_pdf(file: str) -> str:
     doc = fitz.open(file)
     text = ""
@@ -59,6 +63,17 @@ def download(link: str, filename: str) -> None:
 
 def filename(file: str) -> str:
     return ".".join(os.path.basename(file).split(".")[0:-1])
+
+
+def clean_repomix_output(file: str) -> str:
+    raw_text = read(file)
+    lines = raw_text.split("\n")
+    start_line = lines.index("# Repository Structure")
+
+    if start_line == -1:
+        return raw_text
+
+    return "\n".join(lines[start_line:])
 
 
 def output_content(topic, format, content):

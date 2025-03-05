@@ -4,6 +4,7 @@ from enum import Enum
 import typer
 from dotenv import load_dotenv
 
+from agent.code import explain_repo
 from agent.kb import generate_kb_entry, list_kb_entries, remove_kb_entry
 from agent.research import start_research
 from agent.summary import generate_summary
@@ -14,6 +15,7 @@ load_dotenv()
 
 app = typer.Typer(help="a command line interface for your tiny smart workers.")
 kb_app = typer.Typer(help="Commands related to the knowledge base.")
+code_app = typer.Typer(help="Commands related to the coding.")
 
 
 @app.command()
@@ -106,19 +108,24 @@ def remove(
     remove_kb_entry(name, config)
 
 
-@app.command()
-def kb():
+@code_app.command()
+def explain(
+    config: str = typer.Argument(..., help="config file path"),
+):
     """
-    Commands related to the knowledge base.
+    Explain a given code repo.
     """
-    pass
+    explain_repo(config)
 
 
 app.add_typer(kb_app, name="kb")
+app.add_typer(code_app, name="code")
 
 
 def main():
     if len(sys.argv) == 1:
+        sys.argv.append("--help")
+    elif len(sys.argv) == 2 and sys.argv[1] in ["kb", "code"]:
         sys.argv.append("--help")
     app()
 
