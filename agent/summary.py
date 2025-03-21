@@ -234,4 +234,7 @@ def _clean_text(text: str):
             line = re.sub(pattern, "", line)
         lines.append(line)
 
-    return "\n".join(lines)
+    mmMarkdown = "\n".join(lines)
+    if not mmMarkdown.startswith("mindmap"):
+        mmMarkdown = f"mindmap\n{mmMarkdown}"
+    return mmMarkdown

@@ -1,8 +1,8 @@
 import os
 from typing import List
 
-import fitz
 import markdown
+import pymupdf4llm
 import requests
 import resend
 from googlesearch import search
@@ -48,11 +48,8 @@ def exist(file: str) -> bool:
 
 
 def extract_text_from_pdf(file: str) -> str:
-    doc = fitz.open(file)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+    md_text = pymupdf4llm.to_markdown(file)
+    return md_text
 
 
 def download(link: str, filename: str) -> None:
