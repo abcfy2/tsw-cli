@@ -1,5 +1,4 @@
 import sys
-from enum import Enum
 
 import typer
 from dotenv import load_dotenv
@@ -48,21 +47,14 @@ def write(
     write_article(config)
 
 
-class SummaryType(str, Enum):
-    mindmap = "mindmap"
-    text = "text"
-    both = "both"
-
-
 @app.command()
 def summarise(
-    file: str = typer.Argument(..., help="File to generate a summary for"),
-    type: SummaryType = typer.Option("mindmap", help="Summary type to generate"),
+    config: str = typer.Argument(None, help="config file path"),
 ):
     """
-    Generate a summary for a given file.
+    Generate a summary for a given source.
     """
-    generate_summary(file, type)
+    generate_summary(config)
 
 
 @kb_app.command()

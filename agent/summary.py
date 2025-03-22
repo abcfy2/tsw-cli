@@ -1,12 +1,22 @@
+import json
 import re
 from textwrap import dedent
+from typing import Literal
 
 from agno.agent import Agent, RunResponse
 from agno.models.google import Gemini
+from pydantic import BaseModel, Field
 
 from agent.settings import GEMINI_MODEL_ID
 from lib.pako import generate_image_dataurl, generate_pako_link
-from lib.utils import download, extract_text_from_pdf, filename, get_block_body, write
+from lib.utils import (
+    download,
+    extract_text_from_pdf,
+    extract_text_from_youtube,
+    filename,
+    get_block_body,
+    write,
+)
 
 mindmapPrompt = """
         Based on the given article:
@@ -102,6 +112,23 @@ mindmapPrompt = """
         Review the output to ensure it is logical and follows the correct syntax, if not, correct it.
     """
 
+
+class Config(BaseModel):
+    source: str = Field(description="Source to be summarized")
+    source_type: Literal["pdf", "youtube"] = Field(
+        default="pdf", description="Type of the source"
+    )
+    type: Literal["mindmap", "text", "both"] = Field(
+        default="both", description="Type of summary"
+    )
+
+
+def load_config(config: str) -> Config:
+    with open(config, "r") as file:
+        json_data = json.load(file)
+    return Config.model_validate(json_data)
+
+
 mindmap_agent = Agent(
     name="Mindmap Agent",
     model=Gemini(id=GEMINI_MODEL_ID),
@@ -178,24 +205,41 @@ summary_team = Agent(
 )
 
 
-def generate_summary(file: str, type: str):
+def generate_summary(config: str):
+    config = load_config(config)
+
+    type = config.type
+    if type not in ["mindmap", "text", "both"]:
+        print(f"Summary type {type} not supported.")
+
+    source_type = config.source_type
+    if source_type not in ["pdf", "youtube"]:
+        print(f"Source type {source_type} not supported")
+
+    source = config.source
+    if source_type == "pdf":
+        text = extract_text_from_pdf(source)
+        output_file_prefix = f"{filename(source)}"
+    elif source_type == "youtube":
+        text = extract_text_from_youtube(source)
+        output_file_prefix = source
+
+    if not text:
+        print("No text extracted from the source.")
+        return
+
     if type == "mindmap":
-        text = extract_text_from_pdf(file)
         link = _generate_mindmap(text)
-        download(link, f"{filename(file)}.png")
+        download(link, f"{output_file_prefix}.png")
     elif type == "text":
-        text = extract_text_from_pdf(file)
         summary = _generate_text(text)
-        write(f"{filename(file)}.md", summary)
-    elif type == "both":
-        text = extract_text_from_pdf(file)
+        write(f"{output_file_prefix}.md", summary)
+    else:
         mindmap, summary = _generate_both(text)
         lines = summary.split("\n")
         lines.insert(1, f"\n## Mindmap\n![Mindmap]({generate_image_dataurl(mindmap)})")
         summary = "\n".join(lines)
-        write(f"{filename(file)}.md", summary)
-    else:
-        print(f"Summary type {type} not supported.")
+        write(f"{output_file_prefix}.md", summary)
 
 
 def _generate_mindmap(text: str) -> str:

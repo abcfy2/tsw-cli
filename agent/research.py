@@ -72,7 +72,7 @@ def summary_learnings(topic: str, max_length: int):
 def plan_research(topic: str, hints: List[str] = []) -> str:
     planner = Agent(
         name="Planner Agent",
-        model=Groq(id=GROQ_MODEL_ID),
+        model=Groq(id=GROQ_MODEL_ID, temperature=0),
         description=system_prompt,
         instructions=[
             "you will be given a research topic and some hints, generate a google search query based on them.",

@@ -8,6 +8,7 @@ import resend
 from googlesearch import search
 from markdown_pdf import MarkdownPdf, Section
 from markdownify import markdownify as md
+from youtube_transcript_api import YouTubeTranscriptApi
 
 output_dir = "output"
 os.makedirs(output_dir, exist_ok=True)
@@ -50,6 +51,13 @@ def exist(file: str) -> bool:
 def extract_text_from_pdf(file: str) -> str:
     md_text = pymupdf4llm.to_markdown(file)
     return md_text
+
+
+def extract_text_from_youtube(video_id: str) -> str:
+    ytt_api = YouTubeTranscriptApi()
+    transcript = ytt_api.fetch(video_id)
+    text = "\n".join([snippet.text for snippet in transcript])
+    return text
 
 
 def download(link: str, filename: str) -> None:
