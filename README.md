@@ -26,4 +26,4 @@ prerequisites: add source as the dependency
 development:
 
 - test: `mcp dev mcp/kb_exploer.py`
-- install to claude: `mcp dev mcp/kb_exploer.py --with-editable .`
+- install to claude: `mcp install mcp/kb_exploer.py --with-editable .`
