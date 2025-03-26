@@ -55,7 +55,7 @@ def extract_text_from_pdf(file: str) -> str:
 
 def extract_text_from_youtube(video_id: str) -> str:
     ytt_api = YouTubeTranscriptApi()
-    transcript = ytt_api.fetch(video_id)
+    transcript = ytt_api.fetch(video_id, ["en", "zh"])
     text = "\n".join([snippet.text for snippet in transcript])
     return text
 
