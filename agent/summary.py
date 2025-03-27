@@ -13,7 +13,7 @@ from lib.utils import (
     download,
     extract_text_from_pdf,
     extract_text_from_youtube,
-    filename,
+    fetch_content_as_md,
     get_block_body,
     write,
 )
@@ -113,14 +113,19 @@ mindmapPrompt = """
     """
 
 
-class Config(BaseModel):
+class SourceConfig(BaseModel):
     source: str = Field(description="Source to be summarized")
-    source_type: Literal["pdf", "youtube"] = Field(
+    source_type: Literal["pdf", "youtube", "url"] = Field(
         default="pdf", description="Type of the source"
     )
+
+
+class Config(BaseModel):
+    sources: list[SourceConfig] = Field(description="List of sources to be summarized")
     type: Literal["mindmap", "text", "both"] = Field(
         default="both", description="Type of summary"
     )
+    output_file: str = Field(description="Output filename")
 
 
 def load_config(config: str) -> Config:
@@ -212,34 +217,46 @@ def generate_summary(config: str):
     if type not in ["mindmap", "text", "both"]:
         print(f"Summary type {type} not supported.")
 
-    source_type = config.source_type
-    if source_type not in ["pdf", "youtube"]:
-        print(f"Source type {source_type} not supported")
+    combined_text = ""
 
-    source = config.source
-    if source_type == "pdf":
-        text = extract_text_from_pdf(source)
-        output_file_prefix = f"{filename(source)}"
-    elif source_type == "youtube":
-        text = extract_text_from_youtube(source)
-        output_file_prefix = source
+    for source_config in config.sources:
+        source = source_config.source
+        source_type = source_config.source_type
 
-    if not text:
-        print("No text extracted from the source.")
+        if source_type not in ["pdf", "youtube", "url"]:
+            print(f"Source type {source_type} not supported")
+            return
+
+        if source_type == "pdf":
+            text = extract_text_from_pdf(source)
+        elif source_type == "youtube":
+            text = extract_text_from_youtube(source)
+        elif source_type == "url":
+            text = fetch_content_as_md(source)
+
+        if text:
+            combined_text += text + "\n\n"
+        else:
+            print(f"No text extracted from source: {source}")
+
+    if not combined_text:
+        print("No text extracted from any sources.")
         return
 
+    output_name = config.output_file
+
     if type == "mindmap":
-        link = _generate_mindmap(text)
-        download(link, f"{output_file_prefix}.png")
+        link = _generate_mindmap(combined_text)
+        download(link, f"{output_name}.png")
     elif type == "text":
-        summary = _generate_text(text)
-        write(f"{output_file_prefix}.md", summary)
+        summary = _generate_text(combined_text)
+        write(f"{output_name}.md", summary)
     else:
-        mindmap, summary = _generate_both(text)
+        mindmap, summary = _generate_both(combined_text)
         lines = summary.split("\n")
         lines.insert(1, f"\n## Mindmap\n![Mindmap]({generate_image_dataurl(mindmap)})")
         summary = "\n".join(lines)
-        write(f"{output_file_prefix}.md", summary)
+        write(f"{output_name}.md", summary)
 
 
 def _generate_mindmap(text: str) -> str:
