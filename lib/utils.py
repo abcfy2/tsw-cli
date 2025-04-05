@@ -127,6 +127,11 @@ def search_topic(
 
 def fetch_content_as_md(url: str) -> str | None:
     try:
+        if url.startswith("https://www.youtube.com/watch?v="):
+            video_id = url.split("v=")[1]
+            content = extract_text_from_youtube(video_id)
+            return md(content)
+
         r = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
         if r.status_code != 200:
             print(f"Failed to fetch content from {url}")
