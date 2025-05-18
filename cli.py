@@ -3,7 +3,7 @@ import sys
 import typer
 from dotenv import load_dotenv
 
-from agent.code import explain_repo
+from agent.code import explain_repo, pack_repo
 from agent.kb import generate_kb_entry, list_kb_entries, remove_kb_entry
 from agent.research import start_research
 from agent.summary import generate_summary
@@ -108,6 +108,16 @@ def explain(
     Explain a given code repo.
     """
     explain_repo(config)
+
+
+@code_app.command()
+def pack(
+    config: str = typer.Argument(..., help="config file path"),
+):
+    """
+    Pack a given code repo.
+    """
+    pack_repo(config)
 
 
 app.add_typer(kb_app, name="kb")

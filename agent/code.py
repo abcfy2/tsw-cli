@@ -292,6 +292,11 @@ code_reviewer_agent = Agent(
 )
 
 
+def pack_repo(config: str):
+    c = load_config(config)
+    pack_code_into_markdown(c)
+
+
 def explain_repo(config: str):
     c = load_config(config)
     code_for_agent = pack_code_into_markdown(c)

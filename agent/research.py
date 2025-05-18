@@ -127,7 +127,7 @@ def read_articles(topic: str, articles: List[str], max_length: int):
 def write_final_report(topic: str, lang: str) -> str:
     researcher = Agent(
         name="Researcher Agent",
-        model=Gemini(id=GEMINI_MODEL_ID, grounding=True),
+        model=Gemini(id=GEMINI_MODEL_ID),
         description=system_prompt,
         instructions=[
             "generate a professional research report based on the topic and what you have learnt.",

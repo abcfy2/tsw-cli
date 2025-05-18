@@ -8,9 +8,7 @@ from agno.models.google import Gemini
 from pydantic import BaseModel, Field
 
 from agent.settings import GEMINI_MODEL_ID
-from lib.pako import generate_image_dataurl, generate_pako_link
 from lib.utils import (
-    download,
     extract_text_from_pdf,
     extract_text_from_youtube,
     fetch_content_as_md,
@@ -246,15 +244,15 @@ def generate_summary(config: str):
     output_name = config.output_file
 
     if type == "mindmap":
-        link = _generate_mindmap(combined_text)
-        download(link, f"{output_name}.png")
+        mindmap = _generate_mindmap(combined_text)
+        write(f"{output_name}.mm", f"```mermaid\n{mindmap}\n```")
     elif type == "text":
         summary = _generate_text(combined_text)
         write(f"{output_name}.md", summary)
     else:
         mindmap, summary = _generate_both(combined_text)
         lines = summary.split("\n")
-        lines.insert(1, f"\n## Mindmap\n![Mindmap]({generate_image_dataurl(mindmap)})")
+        lines.insert(1, f"\n## Mindmap\n```mermaid\n{mindmap}\n```")
         summary = "\n".join(lines)
         write(f"{output_name}.md", summary)
 
@@ -264,9 +262,9 @@ def _generate_mindmap(text: str) -> str:
     print("raw:\n", result.content)
     cleaned_result = _clean_text(result.content)
     print("cleaned:\n", cleaned_result)
-    image_link = generate_pako_link(cleaned_result)
-    print("visit link:\n", image_link)
-    return image_link
+    # image_link = generate_pako_link(cleaned_result)
+    # print("visit link:\n", image_link)
+    return cleaned_result
 
 
 def _generate_text(text: str) -> str:
