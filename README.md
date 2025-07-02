@@ -7,7 +7,9 @@ A command line interface for your tiny smart workers.
 1. configure your environment
 1. `uv sync`
 1. `source .venv/bin/activate`
-1. `python cli.py`
+1. `uv pip install .`
+1. `tsw-cli --help`
+1. `tsw-cli --config <your_config_file>`
 
 Note:
 

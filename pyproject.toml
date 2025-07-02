@@ -48,3 +48,7 @@ tsw-cli = { workspace = true }
 
 [tool.setuptools]
 packages = ["lib", "agent"]
+py-modules = ["cli"]
+
+[project.scripts]
+tsw-cli = "cli:main"
