@@ -3,6 +3,7 @@ import sys
 import typer
 from dotenv import load_dotenv
 
+from agent.aggregate import aggregate_sources
 from agent.code import explain_repo, pack_repo
 from agent.kb import generate_kb_entry, list_kb_entries, remove_kb_entry
 from agent.research import start_research
@@ -55,6 +56,16 @@ def summarise(
     Generate a summary for a given source.
     """
     generate_summary(config)
+
+
+@app.command()
+def aggregate(
+    config: str = typer.Argument(..., help="config file path"),
+):
+    """
+    Aggregate URLs into a single file.
+    """
+    aggregate_sources(config)
 
 
 @kb_app.command()

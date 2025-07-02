@@ -39,6 +39,11 @@ def write(filename: str, markdown: str, append=False) -> None:
         f.write(markdown)
 
 
+def write_txt(file_name: str, text: str) -> None:
+    with open(f"{output_dir}/{file_name}", "w", encoding="utf-8") as f:
+        f.write(text)
+
+
 def read(filename: str) -> str:
     with open(filename, "r") as f:
         return f.read()
@@ -86,22 +91,22 @@ def output_content(topic, format, content):
         write(f"{topic}.md", content)
     elif format == "pdf":
         generate_pdf(topic, content)
+    elif format == "txt":
+        write_txt(f"{topic}", content)
     else:
-        print(f"Invalid format({format}). Please choose either 'md' or 'pdf'.")
+        print(f"Invalid format({format}). Please choose either 'md' or 'pdf' or 'txt'.")
 
 
 def send_mail(topic: str, receivers: List[str], content: str):
     html = markdown.markdown(content)
     resend.api_key = os.getenv("RESEND_API_KEY")
     email_from = os.getenv("EMAIL_FROM")
-    resend.Emails.send(
-        {
-            "from": email_from,
-            "to": receivers,
-            "subject": topic,
-            "html": html,
-        }
-    )
+    resend.Emails.send({
+        "from": email_from,
+        "to": receivers,
+        "subject": topic,
+        "html": html,
+    })
 
 
 def search_topic(
