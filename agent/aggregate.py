@@ -34,6 +34,14 @@ class JobSchema(BaseModel):
     url: str = Field(description="URL of the job posting")
 
 
+__JOB_EXETRACTOR_PROMPT__ = """
+You are an expert job extractor. Your task is to extract job details from the provided content.
+You will receive a chunk of text that contains job information. Your goal is to extract the following
+fields: name, description, company, location, remote, job_type, salary, and url.
+
+NOTE: NOT ALL FIELDS WILL BE PRESENT IN EVERY JOB POSTING.
+If a field is not present, you should return an empty string ("" NOT N/A) for that field.
+"""
 _browser_config = BrowserConfig(headless=False)
 # 1. Define the LLM extraction strategy
 _llm_strategy = LLMExtractionStrategy(
@@ -42,21 +50,12 @@ _llm_strategy = LLMExtractionStrategy(
     ),
     schema=JobSchema.model_json_schema(),
     extraction_type="schema",
-    instruction="Extract job details from the provided content.",
+    instruction=__JOB_EXETRACTOR_PROMPT__,
     input_format="markdown",  # or "html", "fit_markdown"
     extra_args={
         "temperature": 0.0,
     },
 )
-
-__JOB_EXETRACTOR_PROMPT__ = """
-You are an expert job extractor. Your task is to extract job details from the provided content.
-You will receive a chunk of text that contains job information. Your goal is to extract the following
-fields: name, description, company, location, remote, jobType, and salary.
-
-NOTE: NOT ALL FIELDS WILL BE PRESENT IN EVERY JOB POSTING.
-If a field is not present, you should return an empty string ("" NOT N/A) for that field.
-"""
 
 
 def _load_config(config: str) -> Config:
@@ -65,7 +64,7 @@ def _load_config(config: str) -> Config:
     return Config.model_validate_json(json_data)
 
 
-async def load_url(url: str) -> str | None:
+async def load_url(url: str) -> List[JobSchema] | None:
     run_config = CrawlerRunConfig(
         scan_full_page=True,
         wait_until="networkidle",
@@ -77,7 +76,10 @@ async def load_url(url: str) -> str | None:
     async with AsyncWebCrawler(config=_browser_config) as crawler:
         result = await crawler.arun(url, config=run_config)
         if result.success:
-            return result.extracted_content
+            return [
+                JobSchema.model_validate(job)
+                for job in json.loads(result.extracted_content)
+            ]
         else:
             return None
 
@@ -90,8 +92,7 @@ async def aggregate_content(sources: List[str]) -> List[JobSchema]:
     all_jobs: List[JobSchema] = []
     for result in results:
         if result is not None:
-            job_list_parsed = json.loads(result)
-            all_jobs.extend(JobSchema.model_validate(job) for job in job_list_parsed)
+            all_jobs.extend(result)
 
     return all_jobs
 
